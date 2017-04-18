@@ -77,6 +77,16 @@ public class Entity implements IEngineObject, IReplicable {
 		}
 		return false;
 	}
+	
+	public <C extends Component> C getComponent(Class<C> cls) {
+		for (Iterator<Component> it = components.iterator(); it.hasNext();) {
+			Component c = it.next();
+			if (c.getClass().isAssignableFrom(cls)) {
+				return cls.cast(c);
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public void onStart() {

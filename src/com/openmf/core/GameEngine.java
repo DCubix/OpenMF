@@ -83,6 +83,10 @@ public class GameEngine implements ApplicationListener {
 			input = new Input();
 		}
 		
+		Globals.engine = this;
+		Globals.input = input;
+		Globals.renderer = renderer;
+		
 		AudioSystem.flush();
 		Assets.destroy();
 		onPreLoad();
@@ -141,6 +145,10 @@ public class GameEngine implements ApplicationListener {
 		if (input == null) {
 			input = new Input();
 		}
+		
+		Globals.engine = this;
+		Globals.input = input;
+		Globals.renderer = renderer;
 		
 		onPreLoad();
 		Assets.reload(parentActivity);
@@ -210,6 +218,8 @@ public class GameEngine implements ApplicationListener {
 			
 			current = scenes.get(currentScene);
 			current.onStart();
+			
+			Globals.currentScene = current;
 		}
 	}
 
@@ -241,6 +251,8 @@ public class GameEngine implements ApplicationListener {
 	public void drawProfiler(Renderer2D renderer, Font font, int res, int x, int y, int w, int h) {
 		// draw fps graph
 		renderer.save();
+		renderer.setFixed(true);
+		
 		renderer.setColor(Color.WHITE);
 		renderer.drawRect(x, y, w, h, 100);
 		renderer.drawLine(x, y, x + w + 6, y, 100);

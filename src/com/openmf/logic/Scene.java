@@ -107,6 +107,19 @@ public class Scene implements IEngineObject {
 		}
 	}
 
+	public <T extends Component> Entity getEntity(Class<T> cls) {
+		for (Iterator<Entity> it = entities.iterator(); it.hasNext();) {
+			Entity e = it.next();
+			for (Iterator<Component> cit = e.getComponents().iterator(); cit.hasNext();) {
+				Component c = cit.next();
+				if (c.getClass().isAssignableFrom(cls)) {
+					return e;
+				}
+			}
+		}
+		return null;
+	}
+	
 	public GameEngine getGameEngine() {
 		return gameEngine;
 	}

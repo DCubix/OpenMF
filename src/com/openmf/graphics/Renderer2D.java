@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.badlogic.gdx.Gdx;
+
 import static com.badlogic.gdx.graphics.GL20.*;
 
 import com.openmf.core.BufferUtils;
@@ -41,25 +42,26 @@ public class Renderer2D implements IDisposable {
 		batches = new ArrayList<>();
 		
 		String vs =
-				"attribute vec3 v_position;" +
-				"attribute vec2 v_uv;" +
-				"attribute vec4 v_color;" +
-				"uniform mat4 viewProjection;" +
-				"varying vec2 vs_uv;" +
-				"varying vec4 vs_color;" +
-				"void main() {" +
-				"	gl_Position = viewProjection * vec4(v_position, 1.0);" +
-				"	gl_Position.z = 0.0;" +
-				"	vs_uv = v_uv;" +
-				"	vs_color = v_color;" +
+				"precision highp float;\n" +
+				"attribute vec3 v_position;\n" +
+				"attribute vec2 v_uv;\n" +
+				"attribute vec4 v_color;\n" +
+				"uniform mat4 view;\n" +
+				"uniform mat4 projection;\n" +
+				"varying vec2 vs_uv;\n" +
+				"varying vec4 vs_color;\n" +
+				"void main() {\n" +
+				"	gl_Position = projection * view * vec4(v_position, 1.0);\n" +
+				"	vs_uv = v_uv;\n" +
+				"	vs_color = v_color;\n" +
 				"}";
 		String fs = 
-				"precision mediump float;" +
-				"varying vec2 vs_uv;" +
-				"varying vec4 vs_color;" +
-				"uniform sampler2D tex0;" +
-				"void main() {" +
-				"	gl_FragColor = texture2D(tex0, vs_uv) * vs_color;" +
+				"precision mediump float;\n" +
+				"varying vec2 vs_uv;\n" +
+				"varying vec4 vs_color;\n" +
+				"uniform sampler2D tex0;\n" +
+				"void main() {\n" +
+				"	gl_FragColor = texture2D(tex0, vs_uv) * vs_color;\n" +
 				"}";
 		shader = new ShaderProgram();
 		shader.addShader(vs, ShaderType.VERTEX);
@@ -101,6 +103,19 @@ public class Renderer2D implements IDisposable {
 	public void setColor(Color col) { state.color = col; }
 	public void setRotation(float rot) { state.rotation = rot; }
 	public void setBlendMode(BlendMode blendMode) { state.blendMode = blendMode; }
+	public void setFixed(boolean fixed) { state.fixed = fixed; }
+	
+	public Vec3 unproject (Vec3 screenCoords, float vx, float vy, float vw, float vh) {
+		float x = screenCoords.x, y = screenCoords.y;
+		x = x - vx;
+		y = getScreenHeight() - y - 1;
+		y = y - vy;
+		screenCoords.x = (2 * x) / vw - 1;
+		screenCoords.y = (2 * y) / vh - 1;
+		screenCoords.z = 2 * screenCoords.z - 1;
+		screenCoords = screenCoords.project(projection.mul(view).invert());
+		return screenCoords;
+	}
 	
 	public void restore() {
 		state = prevState;
@@ -280,6 +295,7 @@ public class Renderer2D implements IDisposable {
 	
 	public void submit(Shape shape) {
 		if (shape != null) {
+			shape.fixed = state.fixed;
 			shapes.add(shape);
 		}
 	}
@@ -302,7 +318,8 @@ public class Renderer2D implements IDisposable {
 	
 	public void renderGeometry(ShaderProgram shaderP) {
 		shaderP.bind();
-		shaderP.setUniformMatrix4("viewProjection", projection.mul(view));
+		shaderP.setUniformMatrix4("projection", projection);
+		shaderP.setUniformMatrix4("view", view);
 		shaderP.setUniformInt1("tex0", 0);
 		
 		Collections.sort(batches, new Comparator<Batch>() {
@@ -332,6 +349,9 @@ public class Renderer2D implements IDisposable {
 		
 		for (Batch b : batches) {
 			b.texture.bind(0);
+			if (b.fixed) {
+				shaderP.setUniformMatrix4("view", Mat4.identity());
+			}
 			
 			switch (b.blendMode) {
 				case NORMAL: Gdx.gl.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); break;
@@ -370,7 +390,8 @@ public class Renderer2D implements IDisposable {
 				first.texture,
 				first.vertices.get(0).position.z,
 				first.primType,
-				first.blendMode));
+				first.blendMode,
+				first.fixed));
 		
 		int offset = 0;//first.vertices.size();
 		for (int i = 1; i < shapes.size(); i++) {
@@ -385,7 +406,13 @@ public class Renderer2D implements IDisposable {
 				a.blendMode != b.blendMode)
 			{
 				offset += batches.get(batches.size()-1).count;
-				batches.add(new Batch(offset, a.vertices.size(), a.texture, za, a.primType, a.blendMode));
+				batches.add(new Batch(
+						offset,
+						a.vertices.size(),
+						a.texture,
+						za, a.primType,
+						a.blendMode,
+						a.fixed));
 			} else {
 				batches.get(batches.size()-1).count += a.vertices.size();
 			}

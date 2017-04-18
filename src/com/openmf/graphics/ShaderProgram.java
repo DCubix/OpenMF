@@ -210,9 +210,12 @@ public class ShaderProgram implements IDisposable {
 				if (c == ';') {
 					curr = "";
 				}
+				curr = curr.trim();
 				if (curr.equals("uniform")) {
 					foundUniform = true;
 					curr = "";
+				} else if (curr.equals("void")) {
+					break;
 				}
 			} else {
 				while (c != ';') {

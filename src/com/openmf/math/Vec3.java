@@ -61,6 +61,15 @@ public class Vec3 {
 			x * b.y - y * b.x
 		);
 	}
+	
+	public Vec3 project(Mat4 matrix) {
+		final float l_mat[] = matrix.getM();
+		final float l_w = 1f / (x * l_mat[Mat4.M30] + y * l_mat[Mat4.M31] + z * l_mat[Mat4.M32] + l_mat[Mat4.M33]);
+		return new Vec3(
+				(x * l_mat[Mat4.M00] + y * l_mat[Mat4.M01] + z * l_mat[Mat4.M02] + l_mat[Mat4.M03]) * l_w,
+				(x * l_mat[Mat4.M10] + y * l_mat[Mat4.M11] + z * l_mat[Mat4.M12] + l_mat[Mat4.M13])	* l_w,
+				(x * l_mat[Mat4.M20] + y * l_mat[Mat4.M21] + z * l_mat[Mat4.M22] + l_mat[Mat4.M23]) * l_w);
+	}
 
 	public Vec3 add(Vec3 b) {
 		return new Vec3(x + b.x, y + b.y, z + b.z);

@@ -13,7 +13,8 @@ public class RendererState {
 	public Color color = new Color(1.0f);
 	public float rotation = 0;
 	public BlendMode blendMode = BlendMode.NORMAL;
-	
+	public boolean fixed = false;
+
 	public RendererState copy() {
 		RendererState cpy = new RendererState();
 		cpy.color = new Color(color);
@@ -23,6 +24,7 @@ public class RendererState {
 		cpy.scale = new Vec2(scale);
 		cpy.uv = new Rect(uv);
 		cpy.blendMode = blendMode;
+		cpy.fixed = fixed;
 		return cpy;
 	}
 }

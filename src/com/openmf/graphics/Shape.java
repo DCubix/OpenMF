@@ -8,11 +8,13 @@ public class Shape {
 	protected Texture texture;
 	protected PrimitiveType primType;
 	protected BlendMode blendMode;
+	protected boolean fixed;
 	
 	public Shape() {
 		vertices = new ArrayList<>();
 		texture = null;
 		blendMode = BlendMode.NORMAL;
+		fixed = false;
 	}
 
 	public Shape(Vertex...vs) {

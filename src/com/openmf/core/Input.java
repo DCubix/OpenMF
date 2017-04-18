@@ -2,7 +2,6 @@ package com.openmf.core;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
-import com.openmf.math.Vec2;
 import com.openmf.math.Vec3;
 
 public class Input implements InputProcessor {
@@ -12,10 +11,15 @@ public class Input implements InputProcessor {
 	protected boolean[] down = new boolean[MAX_TOUCHES];
 	protected boolean[] touched = new boolean[MAX_TOUCHES];
 	protected boolean[] released = new boolean[MAX_TOUCHES];
-	protected Vec2[] positions = new Vec2[MAX_TOUCHES];
+	protected Touch[] touches = new Touch[MAX_TOUCHES];
+	protected int touchCount = 0;
 
 	public Input() {
 		Gdx.input.setInputProcessor(this);
+	}
+	
+	public int getTouchCount() {
+		return touchCount;
 	}
 	
 	public boolean isTouched(int index) {
@@ -34,8 +38,8 @@ public class Input implements InputProcessor {
 		return down[index];
 	}
 	
-	public Vec2 getPosition(int index) {
-		return positions[index];
+	public Touch getTouch(int index) {
+		return touches[index];
 	}
 	
 	public Vec3 getAccelerometer() {
@@ -82,22 +86,29 @@ public class Input implements InputProcessor {
 	public boolean touchDown(int x, int y, int p, int btn) {
 		touched[p] = true;
 		down[p] = true;
-		if (positions[p] == null) {
-			positions[p] = new Vec2(x, y);
+		if (touches[p] == null) {
+			touches[p] = new Touch();
 		} else {
-			positions[p].x = x;
-			positions[p].y = y;
+			touches[p].position.set(x, y);
+			touches[p].deltaPosition.set(
+				Gdx.input.getDeltaX(p),
+				Gdx.input.getDeltaY(p)
+			);
 		}
+		touchCount++;
 		return false;
 	}
 
 	@Override
 	public boolean touchDragged(int x, int y, int p) {
-		if (positions[p] == null) {
-			positions[p] = new Vec2(x, y);
+		if (touches[p] == null) {
+			touches[p] = new Touch();
 		} else {
-			positions[p].x = x;
-			positions[p].y = y;
+			touches[p].position.set(x, y);
+			touches[p].deltaPosition.set(
+				Gdx.input.getDeltaX(p),
+				Gdx.input.getDeltaY(p)
+			);
 		}
 		return false;
 	}
@@ -106,12 +117,16 @@ public class Input implements InputProcessor {
 	public boolean touchUp(int x, int y, int p, int btn) {
 		released[p] = true;
 		down[p] = false;
-		if (positions[p] == null) {
-			positions[p] = new Vec2(x, y);
+		if (touches[p] == null) {
+			touches[p] = new Touch();
 		} else {
-			positions[p].x = x;
-			positions[p].y = y;
+			touches[p].position.set(x, y);
+			touches[p].deltaPosition.set(
+				Gdx.input.getDeltaX(p),
+				Gdx.input.getDeltaY(p)
+			);
 		}
+		touchCount--;
 		return false;
 	}
 		
